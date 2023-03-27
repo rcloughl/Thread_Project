@@ -45,6 +45,7 @@ void *passiton(void *arg) {
     int me = (int) arg;
     while (1) {
         sleep(1);
+        printf("start\n");
         printf("passiton%d initial msgq_len: %d\n", me, msgq_len(mq));
         char *m = msgq_recv(mq);
         printf("passiton%d: %p %p %s\n", me, &m, m, m);
@@ -56,18 +57,49 @@ void *passiton(void *arg) {
     return NULL;
 }
 
+
+///////////
+
+void *Produce(void *arg) {
+    int id = (int) arg;
+    int i;
+    for (i = 0; i<50; i++) {
+        char *m=messages[i%4];
+        //printf((char *) m, sizeof(m)*80, "Message of %d is %d",id,i);
+        msgq_send(mq, (char *) m);
+        printf("Message sent from %d is %s\n", id, m);
+        //msgq_show(mq);
+    }
+    printf("Sent all %d from %d\n", i, id);
+    return 0;
+}
+
+void *Consume(void *arg) {
+    int me = (int) arg;
+    int i = 1;
+    while (1) {
+        sleep(1);
+        msgq_show(mq);
+        char *m = msgq_recv(mq);
+        printf("Received message of from %d %d is %s\n", me, i, m);
+        i++;
+    }
+    return 0;
+}
+
+///////////
+
+
 #define MSGQLEN 4
 
 int main(int argc, char *argv[]) {
-    printf("start");           
-    pthread_t p1, p2;
+    pthread_t p1, p2, p3, p4, p5;
     mq = msgq_init(MSGQLEN);
-    printf("next");
     char test = '1';
     if (argc == 2)
         test = argv[1][0];
     switch (test) {
-      case '1':
+    case '1':
         printf("test fill and empty msgq\n");
         pthread_create(&p1, NULL, promtAndSend, NULL);
         pthread_join(p1, NULL);
@@ -78,7 +110,7 @@ int main(int argc, char *argv[]) {
         printf("msgq_show() after all consumed by test 1:\n");
         msgq_show(mq);
         break;
-      case '2':
+    case '2':
         printf("test fill msgs and pass it on\n");
         pthread_create(&p1, NULL, promtAndSend, NULL);
         pthread_join(p1, NULL);
@@ -89,7 +121,22 @@ int main(int argc, char *argv[]) {
         pthread_join(p1, NULL);
         pthread_join(p2, NULL);
         break;
-      default:
+    case '3':
+        printf("Sending messages\n");
+        pthread_create(&p1, NULL, Produce, (void *)1);
+        pthread_create(&p2, NULL, Produce, (void *)2);
+        pthread_create(&p3, NULL, Consume, (void *)3);
+        pthread_create(&p4, NULL, Consume, (void *)4);
+        pthread_create(&p5, NULL, Consume, (void *)5); 
+        pthread_join(p1, NULL);
+        pthread_join(p2, NULL);
+        pthread_join(p3, NULL);
+        pthread_join(p4, NULL);
+        pthread_join(p5, NULL);
+        printf("msgq_show() after all consumed:\n");
+        msgq_show(mq);
+        break;
+    default:
         printf("invalid test selection!\n");
         break;
     }

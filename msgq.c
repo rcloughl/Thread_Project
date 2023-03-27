@@ -8,25 +8,26 @@
 
 struct __zem_t *s;
 
-struct msgq* msgq_init(int nums_msgq){
-    struct msgq *new=malloc(sizeof(struct msgq));
+msgq* msgq_init(int nums_msgq){
+    msgq *new=malloc(sizeof(msgq));
     new->msgHead=NULL;
-    new->msgTail=NULL;    
-    zem_init(s,nums_msgq);
+    new->msgTail=NULL; 
+    new->max=(int *)nums_msgq;   
+    zem_init((struct __zem_t *)&s,nums_msgq);
     return new;
 }
 
 
-int msgq_send(struct msgq *mq, char *msg){
-    struct msgNode *in=malloc(sizeof(struct msgNode));
+int msgq_send(msgq *mq, char *msg){
+    msgNode *in=malloc(sizeof(msgNode));
     in->msg=malloc(sizeof(msg));
+    in->next=NULL;
     strcpy(in->msg,msg);
+    zem_wait((struct __zem_t *)&s);
     if (mq->msgTail==NULL){
-        zem_wait(s);
         mq->msgHead=in;
         mq->msgTail=in;
     } else {
-        zem_wait(s);
         mq->msgTail->next=in;
         mq->msgTail=in;
         return 1;
@@ -34,23 +35,34 @@ int msgq_send(struct msgq *mq, char *msg){
     return -1; 
 }
 
-char *msgq_recv(struct msgq *mq){
-    char *ret = mq->msgHead->msg;
-    if (mq->msgHead->next==NULL){
-        zem_post(s);
-    } else {
-    mq->msgHead=mq->msgHead->next;
-    zem_post(s);
+char *msgq_recv(msgq *mq){
+    while (&s->value>=mq->max){
+        //do nothing
     }
+    char *ret = mq->msgHead->msg;
+    mq->msgHead=mq->msgHead->next;
+    zem_post((struct __zem_t *)&s);
     return ret;
 }
 
-int msgq_len(struct msgq *mq){
-    return s->value;
+int msgq_len(msgq *mq){
+    int i=0;
+    msgNode *curr=mq->msgHead;
+    if (curr==NULL){
+        return 0;
+    }
+    while (curr->next!=NULL){
+        i+=1;
+        curr=curr->next;
+    }
+    return i+1;
 }
 
-void msgq_show(struct msgq *mq){
-    while (mq->msgHead!=NULL){
-        printf("%s\n",msgq_recv(mq));
+void msgq_show(msgq *mq){
+    msgNode *curr=mq->msgHead;
+    while (curr->next!=NULL){
+        printf("%s\n",curr->msg);
+        curr=curr->next;
     }
+    printf("%s\n",curr->msg);
 }

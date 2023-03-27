@@ -1,18 +1,18 @@
 
-struct msgq{
+typedef struct msgq{
     struct msgNode *msgHead;
     struct msgNode *msgTail;
-};
+    int *max;
+}msgq;
 
-struct msgNode{
+typedef struct msgNode{
     char *msg;
     struct msgNode *next;
-    struct msgNode *prev;
-};
+}msgNode;
 
 
-struct msgq* msgq_init(int nums_msgq);
-int msgq_send(struct msgq *mq,char *msg);
-char *msgq_recv(struct msgq *mq);
-int msgq_len(struct msgq *mq);
-void msgq_show(struct msgq *mq);
+msgq* msgq_init(int nums_msgq);
+int msgq_send(msgq *mq,char *msg);
+char *msgq_recv(msgq *mq);
+int msgq_len(msgq *mq);
+void msgq_show(msgq *mq);
