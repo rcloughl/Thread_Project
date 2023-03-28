@@ -5,7 +5,7 @@ CFLAGS = -g -Wall
 default: msgq
 
 msgq: main.o msgq.o zemaphore.o
-	$(CC) $(CFLAGS) -o msgq main.o msgq.o zemaphore.o
+	$(CC) $(CFLAGS) -o msgq main.o msgq.o zemaphore.o -g
 
 main.o: main.c
 	$(CC) $(CFLAGS) -c main.c
