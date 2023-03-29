@@ -74,10 +74,9 @@ void msgq_show(msgq *mq){
         printf("Empty\n");
     } else {
         msgNode *curr=mq->msgHead;
-        while (curr->next!=NULL){
+        while (curr!=NULL){
             printf("%s\n",curr->msg);
             curr=curr->next;
         }
-        printf("%s\n",curr->msg);
     }
 }

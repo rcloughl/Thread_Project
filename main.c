@@ -65,10 +65,11 @@ void *producer(void *arg) {
     int id = (int) arg;
     int i;
     for (i = 0; i<50; i++) {
-        sleep(5);
+        sleep(0);
         char *m=messages[i%4];
         msgq_send(mq, (char *) m);
-        printf("Message:%d m:%s l:%d after 5 seconds\n", id, m,mq->size);
+        printf("Message:%d m:%s after 5 seconds\n", id, m);
+        msgq_show(mq);
     }
     printf("Sent all %d from %d\n", i, id);
     producers-=1;
@@ -80,7 +81,7 @@ void *consumer(void *arg) {
     int pos=me-3;
     int i = 0;
     while (producers!=0) {
-        sleep(1);
+        sleep(4);
         char *m = msgq_recv(mq);
         printf("Received:%s\n",m);
         arr[pos][i]=strdup(m);
