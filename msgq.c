@@ -33,13 +33,13 @@ int msgq_send(msgq *mq, char *msg){
     if (mq->msgHead==NULL){
         mq->msgHead=in;
         mq->msgTail=in;
-        mq->size+=1;
+        mq->size++;
         zem_post((struct __zem_t *)&full);
         return 1;
     } else {
         mq->msgTail->next=in;
         mq->msgTail=in;
-        mq->size+=1;
+        mq->size++;
         zem_post((struct __zem_t *)&full);
         return 1;
     }
@@ -53,7 +53,7 @@ char *msgq_recv(msgq *mq){
     zem_wait((struct __zem_t *)&empty);
     char *ret = mq->msgHead->msg;
     mq->msgHead=mq->msgHead->next;
-    mq->size-=1;
+    mq->size--;
     zem_post((struct __zem_t *)&empty);
     return ret;
 }

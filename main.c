@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <string.h>
 #include <pthread.h>
 #include "zemaphore.h"
 #include "msgq.h"
@@ -8,7 +9,8 @@
 // SEE Labs/GdbLldbLab for more information on lldb - lowlevel debugger
 
 struct msgq *mq;
-
+char* arr[3][100];
+int* producers=0;
 //
 // Main threads
 //
@@ -63,23 +65,28 @@ void *producer(void *arg) {
     int id = (int) arg;
     int i;
     for (i = 0; i<50; i++) {
-        sleep(1);
+        sleep(5);
         char *m=messages[i%4];
         msgq_send(mq, (char *) m);
-        printf("Message:%d m:%s l:%d\n", id, m,mq->size);
+        printf("Message:%d m:%s l:%d after 5 seconds\n", id, m,mq->size);
     }
     printf("Sent all %d from %d\n", i, id);
+    producers-=1;
     return 0;
 }
 
 void *consumer(void *arg) {
     int me = (int) arg;
-    int i = 1;
-    while (1) {
+    int pos=me-3;
+    int i = 0;
+    while (producers!=0) {
+        sleep(1);
         char *m = msgq_recv(mq);
-        printf("Received:%d #%d m:%s\n", me, i, m);
+        printf("Received:%s\n",m);
+        arr[pos][i]=strdup(m);
         i++;
     }
+    arr[me-3][i]=NULL;
     return 0;
 }
 
@@ -119,6 +126,7 @@ int main(int argc, char *argv[]) {
         break;
     case '3':
         printf("Sending messages\n");
+        producers+=2;
         pthread_create(&p1, NULL, producer, (void *)1);
         pthread_create(&p2, NULL, producer, (void *)2);
         pthread_create(&p3, NULL, consumer, (void *)3);
@@ -126,8 +134,25 @@ int main(int argc, char *argv[]) {
         pthread_create(&p5, NULL, consumer, (void *)5); 
         pthread_join(p1, NULL);
         pthread_join(p2, NULL);
+        sleep(5);
         printf("msgq_show() after all consumed:\n");
         msgq_show(mq);
+        printf("Here are the arrays:\n");
+        int tot=0;
+        int i=0;
+        int j=0;
+        while (i<3){
+            printf("\nArray for Consumer %d:\n",i+3);
+            while (arr[i][j]!=NULL){
+                printf("%s ",arr[i][j]);
+                j+=1;
+            }
+            printf("\n%d words in Consumer %d\n",j,i+3);
+            tot+=j;
+            j=0;
+            i+=1;
+        }
+        printf("\n%d messages received\n",tot);
         break;
     default:
         printf("invalid test selection!\n");
