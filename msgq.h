@@ -2,7 +2,8 @@
 typedef struct msgq{
     struct msgNode *msgHead;
     struct msgNode *msgTail;
-    int *max;
+    int max;
+    int *size;
 }msgq;
 
 typedef struct msgNode{

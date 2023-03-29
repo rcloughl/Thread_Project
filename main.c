@@ -8,7 +8,6 @@
 // SEE Labs/GdbLldbLab for more information on lldb - lowlevel debugger
 
 struct msgq *mq;
-struct __zem_t *w;
 
 //
 // Main threads
@@ -64,10 +63,10 @@ void *producer(void *arg) {
     int id = (int) arg;
     int i;
     for (i = 0; i<50; i++) {
+        sleep(1);
         char *m=messages[i%4];
         msgq_send(mq, (char *) m);
-        int t=msgq_len(mq);
-        printf("Message:%d m:%s l:%d\n", id, m,t);
+        printf("Message:%d m:%s l:%d\n", id, m,mq->size);
     }
     printf("Sent all %d from %d\n", i, id);
     return 0;
@@ -77,7 +76,6 @@ void *consumer(void *arg) {
     int me = (int) arg;
     int i = 1;
     while (1) {
-        sleep(1);
         char *m = msgq_recv(mq);
         printf("Received:%d #%d m:%s\n", me, i, m);
         i++;
